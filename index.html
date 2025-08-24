@@ -2,16 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>TAAB NFC Scanner</title>
+  <title>TAAB NFC Card Logger</title>
   <style>
-    body { font-family: Arial; margin: 20px; }
-    label, select, input { display: block; margin: 10px 0; }
+    body { font-family: Arial, sans-serif; margin: 20px; max-width: 600px; }
+    label, select, input, button { display: block; margin: 10px 0; width: 100%; }
+    #companyLabel { display: none; }
+    hr { margin: 20px 0; }
   </style>
 </head>
 <body>
   <h2>TAAB NFC Card Logger</h2>
 
-  <button onclick="scanCard()">Scan NFC Card</button>
+  <button onclick="scanCard()">📶 Scan NFC Card</button>
   <p id="cardIdDisplay">Card ID: <em>None</em></p>
 
   <form id="cardForm">
@@ -24,7 +26,7 @@
       </select>
     </label>
 
-    <label id="companyLabel" style="display:none;">Branded Company:
+    <label id="companyLabel">Branded Company:
       <input type="text" id="company">
     </label>
 
@@ -40,11 +42,18 @@
       <input type="text" id="address">
     </label>
 
-    <button type="button" onclick="saveEntry()">Save Entry</button>
+    <button type="button" onclick="saveEntry()">💾 Save Entry</button>
   </form>
 
   <hr>
-  <button onclick="exportCSV()">Export CSV</button>
+
+  <h3>📂 Upload Existing CSV to Update</h3>
+  <input type="file" id="csvUpload" accept=".csv" onchange="loadCSV(event)">
+  <p id="uploadStatus"></p>
+
+  <hr>
+
+  <button onclick="exportCSV()">📤 Export CSV</button>
   <p id="status"></p>
 
   <script>
@@ -93,9 +102,38 @@
       document.getElementById("status").textContent = `Saved ${entries.length} entries.`;
     }
 
+    function loadCSV(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const text = e.target.result;
+        const lines = text.trim().split("\n");
+        const headers = lines[0].split(",");
+
+        for (let i = 1; i < lines.length; i++) {
+          const values = lines[i].split(",");
+          const entry = {
+            cardId: values[0],
+            category: values[1],
+            company: values[2],
+            name: values[3],
+            phone: values[4],
+            address: values[5]
+          };
+          entries.push(entry);
+        }
+
+        document.getElementById("uploadStatus").textContent = `Loaded ${lines.length - 1} entries from file.`;
+      };
+      reader.readAsText(file);
+    }
+
     function exportCSV() {
       const now = new Date();
-      const filename = `taab_scan_log_${now.toISOString().replace(/[:.]/g, "-")}.csv`;
+      const timestamp = now.toISOString().replace(/[:.]/g, "-");
+      const filename = `taab_scan_log_${timestamp}.csv`;
       const header = ["Card ID", "Category", "Company", "Name", "Phone", "Address"];
       const rows = entries.map(e => [e.cardId, e.category, e.company, e.name, e.phone, e.address]);
       const csvContent = [header, ...rows].map(r => r.join(",")).join("\n");
