@@ -15,7 +15,17 @@ window.addEventListener("DOMContentLoaded", () => {
 // Auto-save to localStorage
 function autoSave() {
   localStorage.setItem("taabEntries", JSON.stringify(entries));
+  showAutoSaveToast();
 }
+
+function showAutoSaveToast() {
+  const toast = document.getElementById("autosaveToast");
+  toast.classList.add("show");
+  setTimeout(() => {
+    toast.classList.remove("show");
+  }, 1500);
+}
+
 
 // NFC Scan
 async function scanCard() {
