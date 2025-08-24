@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TAAB NFC Scanner</title>
+  <style>
+    body { font-family: Arial; margin: 20px; }
+    label, select, input { display: block; margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <h2>TAAB NFC Card Logger</h2>
+
+  <button onclick="scanCard()">Scan NFC Card</button>
+  <p id="cardIdDisplay">Card ID: <em>None</em></p>
+
+  <form id="cardForm">
+    <label>Category:
+      <select id="category" onchange="toggleCompanyInput()">
+        <option value="General">General</option>
+        <option value="General Branded">General Branded</option>
+        <option value="Student">Student</option>
+        <option value="Golden">Golden</option>
+      </select>
+    </label>
+
+    <label id="companyLabel" style="display:none;">Branded Company:
+      <input type="text" id="company">
+    </label>
+
+    <label>Name:
+      <input type="text" id="name">
+    </label>
+
+    <label>Phone:
+      <input type="text" id="phone">
+    </label>
+
+    <label>Address:
+      <input type="text" id="address">
+    </label>
+
+    <button type="button" onclick="saveEntry()">Save Entry</button>
+  </form>
+
+  <hr>
+  <button onclick="exportCSV()">Export CSV</button>
+  <p id="status"></p>
+
+  <script>
+    let entries = [];
+    let currentCardId = "";
+
+    async function scanCard() {
+      if ('NDEFReader' in window) {
+        try {
+          const reader = new NDEFReader();
+          await reader.scan();
+          reader.onreading = event => {
+            const id = event.serialNumber || "Unknown";
+            currentCardId = id;
+            document.getElementById("cardIdDisplay").innerHTML = `Card ID: <em>${id}</em>`;
+          };
+        } catch (error) {
+          alert("NFC scan failed: " + error);
+        }
+      } else {
+        alert("Web NFC not supported on this device.");
+      }
+    }
+
+    function toggleCompanyInput() {
+      const category = document.getElementById("category").value;
+      document.getElementById("companyLabel").style.display = category === "General Branded" ? "block" : "none";
+    }
+
+    function saveEntry() {
+      if (!currentCardId) {
+        alert("Please scan a card first.");
+        return;
+      }
+
+      const entry = {
+        cardId: currentCardId,
+        category: document.getElementById("category").value,
+        company: document.getElementById("company").value || "",
+        name: document.getElementById("name").value || "",
+        phone: document.getElementById("phone").value || "",
+        address: document.getElementById("address").value || ""
+      };
+
+      entries.push(entry);
+      document.getElementById("status").textContent = `Saved ${entries.length} entries.`;
+    }
+
+    function exportCSV() {
+      const now = new Date();
+      const filename = `taab_scan_log_${now.toISOString().replace(/[:.]/g, "-")}.csv`;
+      const header = ["Card ID", "Category", "Company", "Name", "Phone", "Address"];
+      const rows = entries.map(e => [e.cardId, e.category, e.company, e.name, e.phone, e.address]);
+      const csvContent = [header, ...rows].map(r => r.join(",")).join("\n");
+
+      const blob = new Blob([csvContent], { type: "text/csv" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      link.click();
+    }
+  </script>
+</body>
+</html>
