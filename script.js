@@ -26,7 +26,6 @@ function showAutoSaveToast() {
   }, 1500);
 }
 
-
 // NFC Scan
 async function scanCard() {
   if ('NDEFReader' in window) {
