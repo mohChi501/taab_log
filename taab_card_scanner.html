@@ -1,0 +1,132 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TAAB Card Scanner</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    label, select, input, button { display: block; margin: 10px 0; }
+    #log { margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h2>TAAB Card Scanner</h2>
+
+  <button onclick="scanCard()">Scan NFC Card</button>
+  <p id="cardIdDisplay">Card ID: <em>Not scanned</em></p>
+
+  <label for="category">Category:</label>
+  <select id="category" onchange="toggleBrandedInput()">
+    <option value="General">General</option>
+    <option value="General Branded">General Branded</option>
+    <option value="Student">Student</option>
+    <option value="Golden">Golden</option>
+  </select>
+
+  <div id="brandedCompanyDiv" style="display:none;">
+    <label for="brandedCompany">Branded Company:</label>
+    <input type="text" id="brandedCompany">
+  </div>
+
+  <label for="ownerName">Owner Name:</label>
+  <input type="text" id="ownerName">
+
+  <label for="phone">Phone Number:</label>
+  <input type="text" id="phone">
+
+  <label for="address">Address:</label>
+  <input type="text" id="address">
+
+  <button onclick="saveEntry()">Save Entry</button>
+
+  <hr>
+  <h3>Upload Existing CSV to Update</h3>
+  <input type="file" id="csvFileInput" accept=".csv">
+  <button onclick="loadCSV()">Load CSV</button>
+
+  <button onclick="exportCSV()">Export CSV</button>
+
+  <div id="log"></div>
+
+  <script>
+    let scannedData = [];
+
+    function toggleBrandedInput() {
+      const category = document.getElementById("category").value;
+      document.getElementById("brandedCompanyDiv").style.display = category === "General Branded" ? "block" : "none";
+    }
+
+    async function scanCard() {
+      try {
+        const ndef = new NDEFReader();
+        await ndef.scan();
+        ndef.onreading = event => {
+          const decoder = new TextDecoder();
+          const cardId = decoder.decode(event.message.records[0].data);
+          document.getElementById("cardIdDisplay").innerHTML = `Card ID: <strong>${cardId}</strong>`;
+          window.currentCardId = cardId;
+        };
+      } catch (error) {
+        alert("NFC scan failed: " + error);
+      }
+    }
+
+    function saveEntry() {
+      const entry = {
+        cardId: window.currentCardId || "Not scanned",
+        category: document.getElementById("category").value,
+        brandedCompany: document.getElementById("brandedCompany").value || "",
+        ownerName: document.getElementById("ownerName").value || "",
+        phone: document.getElementById("phone").value || "",
+        address: document.getElementById("address").value || ""
+      };
+      scannedData.push(entry);
+      document.getElementById("log").innerHTML += `<p>Saved: ${JSON.stringify(entry)}</p>`;
+    }
+
+    function loadCSV() {
+      const fileInput = document.getElementById("csvFileInput");
+      const file = fileInput.files[0];
+      if (!file) {
+        alert("Please select a CSV file to load.");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const text = e.target.result;
+        const lines = text.split("\n");
+        const headers = lines[0].split(",");
+        for (let i = 1; i < lines.length; i++) {
+          const values = lines[i].split(",");
+          if (values.length === headers.length) {
+            const entry = {};
+            headers.forEach((header, index) => {
+              entry[header.trim()] = values[index].trim();
+            });
+            scannedData.push(entry);
+          }
+        }
+        alert("CSV loaded and data appended.");
+      };
+      reader.readAsText(file);
+    }
+
+    function exportCSV() {
+      const headers = ["cardId", "category", "brandedCompany", "ownerName", "phone", "address"];
+      const rows = scannedData.map(e => headers.map(h => `"${e[h] || ""}"`));
+      const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+
+      const now = new Date().toISOString().replace(/[:.]/g, "-");
+      const filename = `taab_scan_log_${now}.csv`;
+
+      const blob = new Blob([csvContent], { type: "text/csv" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      link.click();
+    }
+  </script>
+</body>
+</html>
