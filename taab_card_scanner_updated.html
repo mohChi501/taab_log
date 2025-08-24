@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TAAB Card Scanner</title>
+  <style>
+    body { font-family: Arial; margin: 20px; }
+    label, select, input { display: block; margin: 10px 0; }
+    #log { margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h2>TAAB Card Scanner</h2>
+
+  <button onclick="scanCard()">Scan NFC Card</button>
+  <p id="cardIdDisplay">Card ID: <em>Not scanned</em></p>
+
+  <label for="category">Category:</label>
+  <select id="category" onchange="toggleBrandedInput()">
+    <option value="General">General</option>
+    <option value="General Branded">General Branded</option>
+    <option value="Student">Student</option>
+    <option value="Golden">Golden</option>
+  </select>
+
+  <div id="brandedCompanyDiv" style="display:none;">
+    <label for="brandedCompany">Branded Company:</label>
+    <input type="text" id="brandedCompany">
+  </div>
+
+  <label for="ownerName">Owner Name:</label>
+  <input type="text" id="ownerName">
+
+  <label for="phone">Phone Number:</label>
+  <input type="text" id="phone">
+
+  <label for="address">Address:</label>
+  <input type="text" id="address">
+
+  <button onclick="saveEntry()">Save Entry</button>
+  <button onclick="exportCSV()">Export CSV</button>
+
+  <div id="log"></div>
+
+  <script>
+    let scannedData = [];
+
+    function toggleBrandedInput() {
+      const category = document.getElementById("category").value;
+      document.getElementById("brandedCompanyDiv").style.display = category === "General Branded" ? "block" : "none";
+    }
+
+    async function scanCard() {
+      try {
+        const ndef = new NDEFReader();
+        await ndef.scan();
+        ndef.onreading = event => {
+          const message = event.message;
+          let cardId = "";
+          for (const record of message.records) {
+            const textDecoder = new TextDecoder(record.encoding || "utf-8");
+            const data = textDecoder.decode(record.data);
+            console.log("Record type:", record.recordType);
+            console.log("Data:", data);
+            cardId += data + " ";
+          }
+          cardId = cardId.trim();
+          document.getElementById("cardIdDisplay").innerHTML = `Card ID: <strong>${cardId}</strong>`;
+          window.currentCardId = cardId;
+        };
+      } catch (error) {
+        alert("NFC scan failed: " + error);
+      }
+    }
+
+    function saveEntry() {
+      const entry = {
+        cardId: window.currentCardId || "Not scanned",
+        category: document.getElementById("category").value,
+        brandedCompany: document.getElementById("brandedCompany").value || "",
+        ownerName: document.getElementById("ownerName").value || "",
+        phone: document.getElementById("phone").value || "",
+        address: document.getElementById("address").value || ""
+      };
+      scannedData.push(entry);
+      document.getElementById("log").innerHTML += `<p>Saved: ${JSON.stringify(entry)}</p>`;
+    }
+
+    function exportCSV() {
+      const headers = ["Card ID", "Category", "Branded Company", "Owner Name", "Phone", "Address"];
+      const rows = scannedData.map(e => [e.cardId, e.category, e.brandedCompany, e.ownerName, e.phone, e.address]);
+      const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
+
+      const now = new Date().toISOString().replace(/[:.]/g, "-");
+      const filename = `taab_scan_log_${now}.csv`;
+
+      const blob = new Blob([csvContent], { type: "text/csv" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      link.click();
+    }
+  </script>
+</body>
+</html>
