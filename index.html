@@ -53,6 +53,7 @@
 
   <div class="bubble">
     <button onclick="exportCSV()">📤 Export CSV</button>
+    <button onclick="clearSavedData()">🧹 Clear Auto-Saved Entries</button>
     <p id="status"></p>
   </div>
 
@@ -73,6 +74,9 @@
       <tbody></tbody>
     </table>
   </div>
+
+  <!-- Toast for auto-save confirmation -->
+  <div id="autosaveToast">✅ Auto-saved</div>
 
   <script src="script.js"></script>
 </body>
