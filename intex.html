@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TAAB NFC Card Logger</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f6f8;
+      margin: 0;
+      padding: 20px;
+      font-size: 18px;
+      color: #333;
+    }
+
+    h2, h3 {
+      text-align: center;
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+
+    .bubble {
+      background-color: #ffffff;
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+
+    label {
+      font-weight: bold;
+      margin-top: 10px;
+      display: block;
+    }
+
+    input, select {
+      font-size: 18px;
+      padding: 10px;
+      margin-top: 5px;
+      width: 100%;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      box-sizing: border-box;
+    }
+
+    button {
+      font-size: 18px;
+      padding: 12px;
+      margin-top: 15px;
+      width: 100%;
+      background-color: #0078D4;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #005fa3;
+    }
+
+    #cardIdDisplay, #status, #uploadStatus {
+      font-size: 18px;
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid #ccc;
+      margin: 30px 0;
+    }
+  </style>
+</head>
+<body>
+  <h2>TAAB NFC Card Logger</h2>
+
+  <div class="bubble">
+    <button onclick="scanCard()">📶 Scan NFC Card</button>
+    <p id="cardIdDisplay">Card ID: <em>None</em></p>
+  </div>
+
+  <div class="bubble">
+    <form id="cardForm">
+      <label>Category:
+        <select id="category" onchange="toggleCompanyInput()">
+          <option value="General">General</option>
+          <option value="General Branded">General Branded</option>
+          <option value="Student">Student</option>
+          <option value="Golden">Golden</option>
+        </select>
+      </label>
+
+      <label id="companyLabel">Branded Company:
+        <input type="text" id="company">
+      </label>
+
+      <label>Name:
+        <input type="text" id="name">
+      </label>
+
+      <label>Phone:
+        <input type="text" id="phone">
+      </label>
+
+      <label>Address:
+        <input type="text" id="address">
+      </label>
+
+      <button type="button" onclick="saveEntry()">💾 Save Entry</button>
+    </form>
+  </div>
+
+  <div class="bubble">
+    <h3>📂 Upload Existing CSV</h3>
+    <input type="file" id="csvUpload" accept=".csv" onchange="loadCSV(event)">
+    <p id="uploadStatus"></p>
+  </div>
+
+  <div class="bubble">
+    <button onclick="exportCSV()">📤 Export CSV</button>
+
+    <div class="bubble">
+      <h3>📋 Scanned Entries Preview</h3>
+      <table id="previewTable" style="width:100%; border-collapse: collapse;">
+        <thead>
+          <tr>
+            <th>Card ID</th>
+            <th>Category</th>
+            <th>Company</th>
+            <th>Name</th>
+            <th>Phone</th>
+            <th>Address</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <p id="status"></p>
+  </div>
+
+  <script>
+    let entries = [];
+    let currentCardId = "";
+    let editingIndex = null;
+    
+    async function scanCard() {
+      if ('NDEFReader' in window) {
+        try {
+          const reader = new NDEFReader();
+          await reader.scan();
+          reader.onreading = event => {
+            const id = event.serialNumber || "Unknown";
+            currentCardId = id;
+            document.getElementById("cardIdDisplay").innerHTML = `Card ID: <em>${id}</em>`;
+          };
+        } catch (error) {
+          alert("NFC scan failed: " + error);
+        }
+      } else {
+        alert("Web NFC not supported on this device.");
+      }
+    }
+    
+    function toggleCompanyInput() {
+      const category = document.getElementById("category").value;
+      document.getElementById("companyLabel").style.display = category === "General Branded" ? "block" : "none";
+    }
+    
+    function saveEntry() {
+      if (!currentCardId) {
+        alert("Please scan a card first.");
+        return;
+      }
+    
+      const entry = {
+        cardId: currentCardId,
+        category: document.getElementById("category").value,
+        company: document.getElementById("company").value || "",
+        name: document.getElementById("name").value || "",
+        phone: document.getElementById("phone").value || "",
+        address: document.getElementById("address").value || ""
+      };
+    
+      if (editingIndex !== null) {
+        entries[editingIndex] = entry;
+        editingIndex = null;
+        document.querySelector("button[onclick='saveEntry()']").textContent = "💾 Save Entry";
+      } else {
+        entries.push(entry);
+      }
+    
+      clearForm();
+      updatePreview();
+      document.getElementById("status").textContent = `Saved ${entries.length} entries.`;
+    }
+    
+    function clearForm() {
+      document.getElementById("category").value = "General";
+      document.getElementById("company").value = "";
+      document.getElementById("name").value = "";
+      document.getElementById("phone").value = "";
+      document.getElementById("address").value = "";
+      document.getElementById("companyLabel").style.display = "none";
+      currentCardId = "";
+      document.getElementById("cardIdDisplay").innerHTML = `Card ID: <em>None</em>`;
+    }
+    
+    function updatePreview() {
+      const tbody = document.querySelector("#previewTable tbody");
+      tbody.innerHTML = "";
+    
+      entries.forEach((entry, index) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${entry.cardId}</td>
+          <td>${entry.category}</td>
+          <td>${entry.company}</td>
+          <td>${entry.name}</td>
+          <td>${entry.phone}</td>
+          <td>${entry.address}</td>
+          <td>
+            <button onclick="editEntry(${index})">✏️ Edit</button>
+            <button onclick="deleteEntry(${index})">🗑️ Delete</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+    
+    function editEntry(index) {
+      const entry = entries[index];
+      currentCardId = entry.cardId;
+      document.getElementById("cardIdDisplay").innerHTML = `Card ID: <em>${entry.cardId}</em>`;
+      document.getElementById("category").value = entry.category;
+      document.getElementById("company").value = entry.company;
+      document.getElementById("name").value = entry.name;
+      document.getElementById("phone").value = entry.phone;
+      document.getElementById("address").value = entry.address;
+      toggleCompanyInput();
+      editingIndex = index;
+      document.querySelector("button[onclick='saveEntry()']").textContent = "✅ Update Entry";
+    }
+    
+    function deleteEntry(index) {
+      if (confirm("Are you sure you want to delete this entry?")) {
+        entries.splice(index, 1);
+        updatePreview();
+        document.getElementById("status").textContent = `Saved ${entries.length} entries.`;
+      }
+    }
+    
+    function loadCSV(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+    
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const text = e.target.result;
+        const lines = text.trim().split("\n");
+        const headers = lines[0].split(",");
+    
+        for (let i = 1; i < lines.length; i++) {
+          const values = lines[i].split(",");
+          const entry = {
+            cardId: values[0],
+            category: values[1],
+            company: values[2],
+            name: values[3],
+            phone: values[4],
+            address: values[5]
+          };
+          entries.push(entry);
+        }
+    
+        updatePreview();
+        document.getElementById("uploadStatus").textContent = `Loaded ${lines.length - 1} entries from file.`;
+      };
+      reader.readAsText(file);
+    }
+    
+    function exportCSV() {
+      const now = new Date();
+      const timestamp = now.toISOString().replace(/[:.]/g, "-");
+      const filename = `taab_scan_log_${timestamp}.csv`;
+      const header = ["Card ID", "Category", "Company", "Name", "Phone", "Address"];
+      const rows = entries.map(e => [e.cardId, e.category, e.company, e.name, e.phone, e.address]);
+      const csvContent = [header, ...rows].map(r => r.join(",")).join("\n");
+    
+      const blob = new Blob([csvContent], { type: "text/csv" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      link.click();
+    }
+  </script>
+</body>
+</html>
