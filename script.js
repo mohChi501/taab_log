@@ -26,7 +26,7 @@ function showAutoSaveToast() {
   }, 1500);
 }
 
-// NFC Scan
+// NFC Scan Mobile
 async function scanCard() {
   if ('NDEFReader' in window) {
     try {
@@ -42,6 +42,15 @@ async function scanCard() {
     }
   } else {
     alert("Web NFC not supported on this device.");
+  }
+}
+
+// NFC Scan External Device
+function handleManualCardInput() {
+  const input = document.getElementById("manualCardInput").value.trim();
+  if (input.length >= 4) { // basic length check
+    currentCardId = input;
+    document.getElementById("cardIdDisplay").innerHTML = `Card ID: <em>${input}</em>`;
   }
 }
 
