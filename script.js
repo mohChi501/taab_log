@@ -248,4 +248,3 @@ function clearSavedData() {
   document.getElementById("status").textContent = "Auto-saved entries cleared.";
   showAutoSaveToast();
 }
-
