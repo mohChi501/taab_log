@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TAAB NFC Card Logger</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h2>TAAB NFC Card Logger</h2>
+
+  <div class="bubble">
+    <label>Scan Card (Mobile NFC or External Reader):
+      <input type="text" id="manualCardInput" placeholder="Tap card or enter ID manually" oninput="handleManualCardInput()" autofocus>
+    </label>
+    <button onclick="scanCard()">📶 Scan via Mobile NFC</button>
+    <p id="cardIdDisplay">Card ID: <em>None</em></p>
+  </div>
+
+  <div class="bubble">
+    <form id="cardForm">
+      <label>Category:
+        <select id="category" onchange="toggleBrandedInput()">
+          <option value="General">General</option>
+          <option value="General Branded">General Branded</option>
+          <option value="Student">Student</option>
+          <option value="Golden">Golden</option>
+        </select>
+      </label>
+
+      <label id="brandedLabel" style="display:none;">Branded Company:
+        <input type="text" id="brandedCompany">
+      </label>
+
+      <label>Name:
+        <input type="text" id="name">
+      </label>
+
+      <label>Phone:
+        <input type="text" id="phone">
+      </label>
+
+      <label>Address:
+        <input type="text" id="address">
+      </label>
+
+      <button type="button" onclick="saveEntry()">💾 Save Entry</button>
+    </form>
+  </div>
+
+  <div class="bubble">
+    <h3>📂 Upload Existing File</h3>
+    <input type="file" id="csvUpload"
+      accept=".csv,text/csv,application/json,.json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.xlsx"
+      onchange="loadFile(event)">
+    <p id="uploadStatus"></p>
+  </div>
+
+  <div class="bubble">
+    <button onclick="exportCSV()">📤 Export CSV</button>
+    <button onclick="clearSavedData()">🧹 Clear Auto-Saved Entries</button>
+    <p id="status"></p>
+  </div>
+
+  <div class="bubble">
+    <h3>📋 Scanned Entries Preview</h3>
+    <table id="previewTable">
+      <thead>
+        <tr>
+          <th>Card ID</th>
+          <th>Category</th>
+          <th>Branded Company</th>
+          <th>Name</th>
+          <th>Phone</th>
+          <th>Address</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div id="autosaveToast">✅ Auto-saved</div>
+
+  <script src="script.js"></script>
+</body>
+</html>
