@@ -70,7 +70,7 @@ function saveEntry() {
   const entry = {
     cardId: currentCardId,
     category: document.getElementById("category").value,
-    branded_company: document.getElementById("branded company").value || "",
+    company: document.getElementById("company").value || "",
     name: document.getElementById("name").value || "",
     phone: document.getElementById("phone").value || "",
     address: document.getElementById("address").value || ""
@@ -93,7 +93,7 @@ function saveEntry() {
 // Clear form fields
 function clearForm() {
   document.getElementById("category").value = "General";
-  document.getElementById("branded company").value = "";
+  document.getElementById("company").value = "";
   document.getElementById("name").value = "";
   document.getElementById("phone").value = "";
   document.getElementById("address").value = "";
@@ -112,7 +112,7 @@ function updatePreview() {
     row.innerHTML = `
       <td>${entry.cardId}</td>
       <td>${entry.category}</td>
-      <td>${entry.branded_company}</td>
+      <td>${entry.company}</td>
       <td>${entry.name}</td>
       <td>${entry.phone}</td>
       <td>${entry.address}</td>
@@ -131,7 +131,7 @@ function editEntry(index) {
   currentCardId = entry.cardId;
   document.getElementById("cardIdDisplay").innerHTML = `Card ID: <em>${entry.cardId}</em>`;
   document.getElementById("category").value = entry.category;
-  document.getElementById("branded company").value = entry.branded_company;
+  document.getElementById("company").value = entry.company;
   document.getElementById("name").value = entry.name;
   document.getElementById("phone").value = entry.phone;
   document.getElementById("address").value = entry.address;
@@ -164,7 +164,7 @@ function loadCSV(event) {
       const entry = {
         cardId: values[0],
         category: values[1],
-        branded_company: values[2],
+        company: values[2],
         name: values[3],
         phone: values[4],
         address: values[5]
@@ -184,7 +184,7 @@ function exportCSV() {
   const timestamp = now.toISOString().replace(/[:.]/g, "-");
   const filename = `taab_scan_log_${timestamp}.csv`;
   const header = ["Card ID", "Category", "Branded Company", "Name", "Phone", "Address"];
-  const rows = entries.map(e => [e.cardId, e.category, e.branded_company, e.name, e.phone, e.address]);
+  const rows = entries.map(e => [e.cardId, e.category, e.company, e.name, e.phone, e.address]);
   const csvContent = [header, ...rows].map(r => r.join(",")).join("\n");
 
   const blob = new Blob([csvContent], { type: "text/csv" });
