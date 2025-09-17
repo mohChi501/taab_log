@@ -111,15 +111,22 @@ function saveEntry() {
   if (imageFile) {
     const reader = new FileReader();
     reader.onload = function(e) {
-      saveEntryData(category, brandedInstitution, studentId, name, phone, address, e.target.result);
+      // Auto-download image with Student ID as filename
+      if (studentId.trim()) {
+        const link = document.createElement("a");
+        link.href = e.target.result;
+        link.download = `${studentId.trim()}.jpg`;
+        link.click();
+      }
+      saveEntryData(category, brandedInstitution, studentId, name, phone, address, e.target.result, studentId.trim() ? `${studentId.trim()}.jpg` : "");
     };
     reader.readAsDataURL(imageFile);
   } else {
-    saveEntryData(category, brandedInstitution, studentId, name, phone, address, "");
+    saveEntryData(category, brandedInstitution, studentId, name, phone, address, "", "");
   }
 }
 
-function saveEntryData(category, brandedInstitution, studentId, name, phone, address, imageData) {
+function saveEntryData(category, brandedInstitution, studentId, name, phone, address, imageData, filename) {
   const entry = {
     cardId: currentCardId,
     category,
@@ -129,7 +136,8 @@ function saveEntryData(category, brandedInstitution, studentId, name, phone, add
     phone,
     address,
     timestamp: new Date().toISOString(),
-    image: imageData
+    image: imageData,
+    filename: filename
   };
 
   if (editingIndex !== null) {
@@ -177,7 +185,8 @@ function updatePreview(filtered = null) {
       <td>${entry.phone}</td>
       <td>${entry.address}</td>
       <td>${new Date(entry.timestamp).toLocaleString()}</td>
-      <td>${entry.image ? `<img src="${entry.image}" alt="Image" style="width:40px;height:40px;object-fit:cover;">` : ""}</td>
+      <td>${entry.filename || ""}</td>
+      <td>${entry.image ? `<img src="${entry.image}" alt="Image" onclick="showImagePopup('${entry.image}')">` : ""}</td>
       <td>
         <button onclick="editEntry(${index})">✏️</button>
         <button onclick="deleteEntry(${index})">🗑️</button>
@@ -185,6 +194,26 @@ function updatePreview(filtered = null) {
     `;
     tbody.appendChild(row);
   });
+}
+
+// Floating image popup functions
+function showImagePopup(src) {
+  const popup = document.getElementById("imagePopup");
+  const img = document.getElementById("popupImage");
+  img.src = src;
+
+  // Position popup relative to table
+  const table = document.getElementById("previewTable");
+  const tableRect = table.getBoundingClientRect();
+  popup.style.top = `${window.scrollY + tableRect.top + tableRect.height / 2}px`;
+  popup.style.left = `50%`;
+  popup.style.transform = "translate(-50%, -50%)";
+
+  popup.style.display = "block";
+}
+
+function hideImagePopup() {
+  document.getElementById("imagePopup").style.display = "none";
 }
 
 // Edit entry
@@ -248,7 +277,8 @@ function loadCSV(file) {
         phone: values[5] || "",
         address: values[6] || "",
         timestamp: values[7] || new Date().toISOString(),
-        image: values[8] || "" // may be empty
+        filename: values[8] || "",
+        image: values[9] || ""
       };
       entries.push(entry);
     }
@@ -276,6 +306,7 @@ function loadJSON(file) {
             phone: entry.phone || "",
             address: entry.address || "",
             timestamp: entry.timestamp || new Date().toISOString(),
+            filename: entry.filename || "",
             image: entry.image || ""
           });
         });
@@ -299,11 +330,11 @@ function exportCSV() {
   const timestamp = now.toISOString().replace(/[:.]/g, "-");
   const filename = `taab_scan_log_${timestamp}.csv`;
 
-  const header = ["Card ID", "Category", "Branded Institution", "Student ID No.", "Name", "Phone", "Address", "Timestamp"];
+  const header = ["Card ID", "Category", "Branded Institution", "Student ID No.", "Name", "Phone", "Address", "Timestamp", "Filename"];
   if (includeImages) header.push("Image");
 
   const rows = entries.map(e => {
-    const row = [e.cardId, e.category, e.brandedInstitution, e.studentId, e.name, e.phone, e.address, e.timestamp];
+    const row = [e.cardId, e.category, e.brandedInstitution, e.studentId, e.name, e.phone, e.address, e.timestamp, e.filename];
     if (includeImages) row.push(e.image);
     return row;
   });
@@ -325,6 +356,7 @@ function exportJSON() {
   const filename = `taab_scan_log_${timestamp}.json`;
 
   const data = entries.map(e => {
+    // Build object in the exact CSV order, with Image last if included
     const obj = {
       cardId: e.cardId,
       category: e.category,
@@ -333,9 +365,12 @@ function exportJSON() {
       name: e.name,
       phone: e.phone,
       address: e.address,
-      timestamp: e.timestamp
+      timestamp: e.timestamp,
+      filename: e.filename
     };
-    if (includeImages) obj.image = e.image;
+    if (includeImages) {
+      obj.image = e.image; // appended last
+    }
     return obj;
   });
 
@@ -357,7 +392,8 @@ function filterEntries() {
     e.name.toLowerCase().includes(query) ||
     e.phone.toLowerCase().includes(query) ||
     e.address.toLowerCase().includes(query) ||
-    (e.timestamp && e.timestamp.toLowerCase().includes(query))
+    (e.timestamp && e.timestamp.toLowerCase().includes(query)) ||
+    (e.filename && e.filename.toLowerCase().includes(query))
   );
   updatePreview(filtered);
 }
