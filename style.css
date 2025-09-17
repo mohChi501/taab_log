@@ -101,6 +101,7 @@ td img {
   max-height: 40px;
   object-fit: cover;
   border-radius: 4px;
+  cursor: pointer;
 }
 
 /* Search Bar */
@@ -138,6 +139,34 @@ td img {
   opacity: 1;
 }
 
+/* Floating Image Popup */
+.popup-hover {
+  position: absolute;
+  background: white;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  padding: 10px;
+  display: none;
+  z-index: 2000; /* above table */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.popup-hover img {
+  max-width: 400px;
+  max-height: 400px;
+  display: block;
+}
+
+.popup-hover .close-btn {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+  cursor: pointer;
+}
+
 /* Responsive Adjustments */
 @media screen and (max-width: 600px) {
   body {
@@ -154,5 +183,10 @@ td img {
 
   table {
     font-size: 0.85rem;
+  }
+
+  .popup-hover img {
+    max-width: 90vw;
+    max-height: 70vh;
   }
 }
