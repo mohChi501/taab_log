@@ -39,8 +39,8 @@
         <input type="text" id="studentIdNo">
       </label>
 
-      <label id="studentImageLabel" style="display:none;">Attach Image (optional):
-        <input type="file" id="studentImage" accept="image/*">
+      <label id="studentImageLabel" style="display:none;">Attach or Capture Image (optional):
+        <input type="file" id="studentImage" accept="image/*" capture="environment">
       </label>
 
       <label>Name:
@@ -101,12 +101,19 @@
           <th>Phone</th>
           <th>Address</th>
           <th>Timestamp</th>
+          <th>Filename</th>
           <th>Image</th>
           <th>Actions</th>
         </tr>
       </thead>
       <tbody></tbody>
     </table>
+  </div>
+
+  <!-- Floating Image Popup -->
+  <div id="imagePopup" class="popup-hover">
+    <span class="close-btn" onclick="hideImagePopup()">×</span>
+    <img id="popupImage" src="">
   </div>
 
   <!-- Auto-save Toast -->
