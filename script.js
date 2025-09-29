@@ -60,15 +60,25 @@ function handleManualCardInput() {
 
   if (input.length >= 4 && !isNaN(input)) {
     const base10 = parseInt(input, 10);
-    const base16 = base10.toString(16).toUpperCase(); // hex string, uppercase
+    let hex = base10.toString(16).toUpperCase();
 
-    currentCardId = base16;
-    document.getElementById("cardIdDisplay").innerHTML = `Card ID: <em>${base16}</em>`;
+    // Ensure even length (pad if needed)
+    if (hex.length % 2 !== 0) {
+      hex = "0" + hex;
+    }
+
+    // Split into bytes, reverse, and join
+    const bytes = hex.match(/.{1,2}/g);
+    const reversedHex = bytes.reverse().join("");
+
+    currentCardId = reversedHex;
+    document.getElementById("cardIdDisplay").innerHTML = `Card ID: <em>${reversedHex}</em>`;
   } else {
     currentCardId = "";
     document.getElementById("cardIdDisplay").innerHTML = `Card ID: <em>Invalid input</em>`;
   }
 }
+
 
 
 // Show/hide extra fields based on category
