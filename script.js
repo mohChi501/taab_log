@@ -46,13 +46,30 @@ async function scanCard() {
 }
 
 // Manual input for external USB readers
+//function handleManualCardInput() {
+//  const input = document.getElementById("manualCardInput").value.trim();
+//  if (input.length >= 4) {
+//    currentCardId = input;
+//    document.getElementById("cardIdDisplay").innerHTML = `Card ID: <em>${input}</em>`;
+//  }
+//}
+
+// Manual input for external USB readers
 function handleManualCardInput() {
   const input = document.getElementById("manualCardInput").value.trim();
-  if (input.length >= 4) {
-    currentCardId = input;
-    document.getElementById("cardIdDisplay").innerHTML = `Card ID: <em>${input}</em>`;
+
+  if (input.length >= 4 && !isNaN(input)) {
+    const base10 = parseInt(input, 10);
+    const base16 = base10.toString(16).toUpperCase(); // hex string, uppercase
+
+    currentCardId = base16;
+    document.getElementById("cardIdDisplay").innerHTML = `Card ID: <em>${base16}</em>`;
+  } else {
+    currentCardId = "";
+    document.getElementById("cardIdDisplay").innerHTML = `Card ID: <em>Invalid input</em>`;
   }
 }
+
 
 // Show/hide extra fields based on category
 function toggleExtraFields() {
