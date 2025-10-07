@@ -87,11 +87,13 @@ function toggleExtraFields() {
 
   const brandedInstitutionLabel = document.getElementById("brandedInstitutionLabel");
   const studentIdLabel = document.getElementById("studentIdLabel");
+  const homeroomLabel = document.getElementById("homeroomLabel");
   const studentImageLabel = document.getElementById("studentImageLabel");
 
   // Hide all by default
   brandedInstitutionLabel.style.display = "none";
   studentIdLabel.style.display = "none";
+  homeroomLabel.style.display = "none";
   studentImageLabel.style.display = "none";
 
   if (category === "General Branded" || category === "Student") {
@@ -101,6 +103,7 @@ function toggleExtraFields() {
   if (category === "Student ID") {
     brandedInstitutionLabel.style.display = "block";
     studentIdLabel.style.display = "block";
+    homeroomLabel.style.display = "block";
     studentImageLabel.style.display = "block";
   }
 }
@@ -115,6 +118,7 @@ function saveEntry() {
   const category = document.getElementById("category").value;
   const brandedInstitution = document.getElementById("brandedInstitution").value || "";
   const studentId = document.getElementById("studentIdNo").value || "";
+  const homeroom = document.getElementById("homeroom").value || "";
   const name = document.getElementById("name").value || "";
   const phone = document.getElementById("phone").value || "";
   const address = document.getElementById("address").value || "";
@@ -145,20 +149,21 @@ function saveEntry() {
         link.download = `${studentId.trim()}.jpg`;
         link.click();
       }
-      saveEntryData(category, brandedInstitution, studentId, name, phone, address, e.target.result, studentId.trim() ? `${studentId.trim()}.jpg` : "");
+      saveEntryData(category, brandedInstitution, studentId, homeroom, name, phone, address, e.target.result, studentId.trim() ? `${studentId.trim()}.jpg` : "");
     };
     reader.readAsDataURL(imageFile);
   } else {
-    saveEntryData(category, brandedInstitution, studentId, name, phone, address, "", "");
+    saveEntryData(category, brandedInstitution, studentId, homeroom, name, phone, address, "", "");
   }
 }
 
-function saveEntryData(category, brandedInstitution, studentId, name, phone, address, imageData, filename) {
+function saveEntryData(category, brandedInstitution, studentId, homeroom, name, phone, address, imageData, filename) {
   const entry = {
     cardId: currentCardId,
     category,
     brandedInstitution,
     studentId,
+    homeroom,
     name,
     phone,
     address,
@@ -183,9 +188,10 @@ function saveEntryData(category, brandedInstitution, studentId, name, phone, add
 
 // Clear form fields
 function clearForm() {
-  document.getElementById("category").value = "General";
-  document.getElementById("brandedInstitution").value = "";
+  //document.getElementById("category").value = "General";
+  //document.getElementById("brandedInstitution").value = "";
   document.getElementById("studentIdNo").value = "";
+  document.getElementById("homeroom").value = "";
   document.getElementById("studentImage").value = "";
   document.getElementById("name").value = "";
   document.getElementById("phone").value = "";
@@ -208,6 +214,7 @@ function updatePreview(filtered = null) {
       <td>${entry.category}</td>
       <td>${entry.brandedInstitution}</td>
       <td>${entry.studentId || ""}</td>
+      <td>${entry.homeroom || ""}</td>
       <td>${entry.name}</td>
       <td>${entry.phone}</td>
       <td>${entry.address}</td>
@@ -251,6 +258,7 @@ function editEntry(index) {
   document.getElementById("category").value = entry.category;
   document.getElementById("brandedInstitution").value = entry.brandedInstitution;
   document.getElementById("studentIdNo").value = entry.studentId;
+  document.getElementById("homeroom").value = entry.homeroom;
   document.getElementById("name").value = entry.name;
   document.getElementById("phone").value = entry.phone;
   document.getElementById("address").value = entry.address;
@@ -300,12 +308,13 @@ function loadCSV(file) {
         category: values[1] || "",
         brandedInstitution: values[2] || "",
         studentId: values[3] || "",
-        name: values[4] || "",
-        phone: values[5] || "",
-        address: values[6] || "",
-        timestamp: values[7] || new Date().toISOString(),
-        filename: values[8] || "",
-        image: values[9] || ""
+        homeroom: values[4] || "",
+        name: values[5] || "",
+        phone: values[6] || "",
+        address: values[7] || "",
+        timestamp: values[8] || new Date().toISOString(),
+        filename: values[9] || "",
+        image: values[10] || ""
       };
       entries.push(entry);
     }
@@ -329,6 +338,7 @@ function loadJSON(file) {
             category: entry.category || "",
             brandedInstitution: entry.brandedInstitution || "",
             studentId: entry.studentId || "",
+            homeroom: entry.homeroom || "",
             name: entry.name || "",
             phone: entry.phone || "",
             address: entry.address || "",
@@ -357,11 +367,11 @@ function exportCSV() {
   const timestamp = now.toISOString().replace(/[:.]/g, "-");
   const filename = `taab_scan_log_${timestamp}.csv`;
 
-  const header = ["Card ID", "Category", "Branded Institution", "Student ID No.", "Name", "Phone", "Address", "Timestamp", "Filename"];
+  const header = ["Card ID", "Category", "Branded Institution", "Student ID No.", "Homeroom", "Name", "Phone", "Address", "Timestamp", "Filename"];
   if (includeImages) header.push("Image");
 
   const rows = entries.map(e => {
-    const row = [e.cardId, e.category, e.brandedInstitution, e.studentId, e.name, e.phone, e.address, e.timestamp, e.filename];
+    const row = [e.cardId, e.category, e.brandedInstitution, e.studentId, e.homeroom, e.name, e.phone, e.address, e.timestamp, e.filename];
     if (includeImages) row.push(e.image);
     return row;
   });
@@ -389,6 +399,7 @@ function exportJSON() {
       category: e.category,
       brandedInstitution: e.brandedInstitution,
       studentId: e.studentId,
+      homeroom: e.homeroom,
       name: e.name,
       phone: e.phone,
       address: e.address,
@@ -416,6 +427,7 @@ function filterEntries() {
     e.category.toLowerCase().includes(query) ||
     e.brandedInstitution.toLowerCase().includes(query) ||
     (e.studentId && e.studentId.toLowerCase().includes(query)) ||
+    e.homeroom.toLowerCase().includes(query) ||
     e.name.toLowerCase().includes(query) ||
     e.phone.toLowerCase().includes(query) ||
     e.address.toLowerCase().includes(query) ||
