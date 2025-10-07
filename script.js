@@ -189,7 +189,7 @@ function saveEntryData(category, brandedInstitution, studentId, homeroom, name, 
 // Clear form fields
 function clearForm() {
   //document.getElementById("category").value = "General";
-  //document.getElementById("brandedInstitution").value = "";
+  document.getElementById("brandedInstitution").value = "";
   document.getElementById("studentIdNo").value = "";
   document.getElementById("homeroom").value = "";
   document.getElementById("studentImage").value = "";
